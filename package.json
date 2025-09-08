@@ -5,11 +5,13 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "@graphql-tools/load-files": "^7.0.1",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "graphql": "^16.11.0"
+    "graphql": "^16.11.0",
+    "mongoose": "^8.18.0"
   },
   "devDependencies": {
     "consola": "^3.4.2",

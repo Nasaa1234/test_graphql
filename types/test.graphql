@@ -1,0 +1,69 @@
+type News {
+  _id: ID!
+  title: String
+  topImage: String
+  bottomImage: String
+  content: String
+  url: String
+  createdAt: String
+  updatedAt: String
+}
+
+type Feedback {
+  createdAt: String
+  updatedAt: String
+  content: String
+  _id: ID!
+}
+
+type Work {
+  _id: ID!
+  year: String!
+  description: String!
+  image: String!
+  createdAt: String
+  updatedAt: String
+}
+
+input NewsInput {
+  title: String!
+  content: String!
+  url: String
+  topImage: String
+  bottomImage: String
+}
+
+input FeedbackInput {
+  content: String!
+  createdAt: String
+  updatedAt: String
+}
+
+input WorkInput {
+  year: String!
+  description: String!
+  image: String!
+}
+
+type Query {
+  getAllNews: [News]
+  getNewsDetail(getNewsDetailId: ID!): News
+  getAllFeedback: [Feedback]
+  getAllWorks: [Work]
+}
+
+type Mutation {
+  addNews(input: NewsInput): News
+  deleteNews(newsId: ID): DeleteResponse
+  editNews(newsId: ID, input: NewsInput): News
+  deleteFeedback(id: ID!): DeleteResponse
+  addFeedback(input: FeedbackInput): Feedback
+  addWork(input: WorkInput): Work
+  editWork(workId: ID!, input: WorkInput): Work
+  deleteWork(workId: ID!): DeleteResponse
+}
+
+type DeleteResponse {
+  success: Boolean
+  message: String
+}
