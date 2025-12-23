@@ -96,9 +96,9 @@ const resolvers = {
     deleteNews,
   },
 }
-//mongodb+srv://CCS:CCSADMIN@cluster0.xivay.mongodb.net/CSSDB
+
 mongoose
-  .connect("mongodb://localhost:27017/CCSDB")
+  .connect(process.env.MONGO)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err))
 
