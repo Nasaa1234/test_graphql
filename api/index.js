@@ -6,7 +6,6 @@ import cors from "cors"
 import mongoose from "mongoose"
 import "dotenv/config"
 
-import { addFeedback, getAllFeedback } from "../resolvers/FeedbackResolvers.js"
 import {
   getAllNews,
   addNews,
@@ -14,12 +13,6 @@ import {
   deleteNews,
   editNews,
 } from "../resolvers/NewsResolvers.js"
-import {
-  addWork,
-  deleteWork,
-  editWork,
-  getAllWorks,
-} from "../resolvers/WorkResolvers.js"
 
 const app = express()
 app.use(
@@ -31,71 +24,59 @@ app.use(
 const httpServer = http.createServer(app)
 
 const typeDefs = gql`
+  type Section {
+    title: String
+    content: String
+    images: [String]
+    listItems: [String]
+  }
+
   type News {
     _id: String
     title: String
-    topImage: String
-    bottomImage: String
-    content: String
-    url: String
-    createdAt: String
+    slug: String
+    description: String
+    image: String
     type: String
+    sections: [Section]
+    author: String
+    published: Boolean
+    publishedAt: String
+    tags: [String]
+    views: Int
+    createdAt: String
     updatedAt: String
   }
 
-  type Feedback {
-    createdAt: String
-    updatedAt: String
+  input SectionInput {
+    title: String
     content: String
-    _id: String
-  }
-
-  type Work {
-    _id: String
-    year: String!
-    description: String!
-    image: String!
-    createdAt: String
-    updatedAt: String
+    images: [String]
+    listItems: [String]
   }
 
   input NewsInput {
     title: String!
-    content: String!
-    url: String
-    topImage: String
-    bottomImage: String
-    type: String
-  }
-
-  input FeedbackInput {
-    content: String!
-    createdAt: String
-    updatedAt: String
-  }
-
-  input WorkInput {
-    year: String!
     description: String!
-    image: String!
+    image: String
+    type: String!
+    sections: [SectionInput]
+    slug: String
+    author: String
+    published: Boolean
+    publishedAt: String
+    tags: [String]
   }
-
   type Query {
     getAllNews: [News]
     getNewsDetail(getNewsDetailId: String): News
-    getAllFeedback: [Feedback]
-    getAllWorks: [Work]
   }
 
   type Mutation {
     addNews(input: NewsInput): News
-    deleteNews(newsId: ID): DeleteResponse
-    editNews(newsId: ID, input: NewsInput): News
-    deleteFeedback(id: String): DeleteResponse
-    addFeedback(input: FeedbackInput): Feedback
-    addWork(input: WorkInput): Work
-    editWork(workId: String, input: WorkInput): Work
-    deleteWork(workId: String): DeleteResponse
+    editNews(newsId: String!, input: NewsInput): News
+    uploadImage(imageBase64: String): String
+    deleteNews(newsId: String): DeleteResponse
   }
 
   type DeleteResponse {
@@ -106,26 +87,18 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    getAllWorks,
     getAllNews,
-    getAllFeedback,
     getNewsDetail,
   },
   Mutation: {
-    addWork,
-    addFeedback,
     addNews,
-    deleteNews,
     editNews,
-    editWork,
-    deleteWork,
+    deleteNews,
   },
 }
-
+//mongodb+srv://CCS:CCSADMIN@cluster0.xivay.mongodb.net/CSSDB
 mongoose
-  .connect(
-    "mongodb+srv://mongo:nasaa0122@liberal.mlu2opy.mongodb.net/baterdene?retryWrites=true&w=majority"
-  )
+  .connect("mongodb://localhost:27017/CCSDB")
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err))
 
