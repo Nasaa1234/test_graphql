@@ -1,6 +1,4 @@
 import { ApolloServer, gql } from "apollo-server-express"
-import { ApolloServerPluginDrainHttpServer } from "apollo-server-core"
-import http from "http"
 import express from "express"
 import cors from "cors"
 import mongoose from "mongoose"
@@ -21,6 +19,9 @@ import {
   getAllWorks,
 } from "../resolvers/WorkResolvers.js"
 
+// Check if running on Vercel
+const isVercel = process.env.VERCEL || process.env.VERCEL_ENV
+
 const app = express()
 app.use(
   cors({
@@ -28,7 +29,6 @@ app.use(
     credentials: true,
   })
 )
-const httpServer = http.createServer(app)
 
 const typeDefs = gql`
   type News {
@@ -122,28 +122,64 @@ const resolvers = {
   },
 }
 
-mongoose
-  .connect(
+// Cache MongoDB connection for serverless
+let cachedDb = null
+
+const connectToDatabase = async () => {
+  if (cachedDb && mongoose.connection.readyState === 1) {
+    return cachedDb
+  }
+
+  const MONGODB_URI =
+    process.env.MONGODB_URI ||
     "mongodb+srv://mongo:nasaa0122@liberal.mlu2opy.mongodb.net/baterdene?retryWrites=true&w=majority"
-  )
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err))
 
-const startApolloServer = async (app, httpServer) => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    introspection: true,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  })
-
-  await server.start()
-  server.applyMiddleware({ app })
-
-  const PORT = process.env.PORT || 4000
-  httpServer.listen(PORT, () => {
-    console.log(`Server ready at http://localhost:${PORT}${server.graphqlPath}`)
-  })
+  try {
+    await mongoose.connect(MONGODB_URI)
+    cachedDb = mongoose.connection
+    console.log("MongoDB connected")
+    return cachedDb
+  } catch (err) {
+    console.error("MongoDB connection error:", err)
+    throw err
+  }
 }
 
-startApolloServer(app, httpServer)
+// Create Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  introspection: true,
+})
+
+let serverStarted = false
+
+const startServer = async () => {
+  if (!serverStarted) {
+    await server.start()
+    server.applyMiddleware({ app, path: "/" })
+    serverStarted = true
+  }
+}
+
+// Export handler for Vercel
+export default async function handler(req, res) {
+  await connectToDatabase()
+  await startServer()
+  return app(req, res)
+}
+
+// Local development server
+if (!isVercel) {
+  const startLocalServer = async () => {
+    await connectToDatabase()
+    await startServer()
+
+    const PORT = process.env.PORT || 4000
+    app.listen(PORT, () => {
+      console.log(`🚀 Server ready at http://localhost:${PORT}/`)
+    })
+  }
+
+  startLocalServer()
+}
